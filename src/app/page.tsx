@@ -1,113 +1,240 @@
-import Image from "next/image";
+'use client'
+import * as React from 'react';
+import { styled, useTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+// import p from '@mui/material/p';
+import Slider from '@mui/material/Slider';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import PauseRounded from '@mui/icons-material/PauseRounded';
+import PlayArrowRounded from '@mui/icons-material/PlayArrowRounded';
+import FastForwardRounded from '@mui/icons-material/FastForwardRounded';
+import FastRewindRounded from '@mui/icons-material/FastRewindRounded';
+import VolumeUpRounded from '@mui/icons-material/VolumeUpRounded';
+import VolumeDownRounded from '@mui/icons-material/VolumeDownRounded';
+import { songs } from '@/api';
 
-export default function Home() {
+
+const Widget = styled('div')(({ theme }) => ({
+  padding: 16,
+  borderRadius: 16,
+  width: 360,
+  maxWidth: '100%',
+  margin: 'auto',
+  position: 'relative',
+  zIndex: 1,
+  backgroundColor:
+    theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)',
+  backdropFilter: 'blur(40px)',
+  display: 'flex',
+  // justifyContent: "space-evenly",
+  flexDirection: 'column',
+  gap: '3px'
+}));
+
+const CoverImage = styled('div')({
+  objectFit: 'cover',
+  overflow: 'hidden',
+  flexShrink: 0,
+  borderRadius: 8,
+  backgroundColor: 'rgba(0,0,0,0.08)',
+  '& > img': {
+    width: '100%',
+  },
+});
+
+const TinyText = styled('p')({
+  fontSize: '0.75rem',
+  opacity: 0.38,
+  fontWeight: 500,
+  letterSpacing: 0.2,
+});
+export default function MusicPlayerSlider() {
+  // const duration = 200; // seconds
+  const ref = React.useRef<HTMLAudioElement>()
+  const [position, setPosition] = React.useState(32);
+  const [paused, setPaused] = React.useState(false);
+  function formatDuration(currentTime: number) {
+    const minute = Math.floor(currentTime / 60);
+    const secondLeft = currentTime - minute * 60;
+    return `${minute}:${secondLeft < 10 ? `0${secondLeft}` : secondLeft}`;
+  }
+  const [song, setSong] = React.useState(songs.map(song => [
+    song
+  ]))
+  const [current, setCurrent] = React.useState(0)
+  const [prev, setPrev] = React.useState(0)
+  const [percentage, setPercentage] = React.useState<number>(0)
+  const [isPlaying, setIsPlaying] = React.useState(false)
+
+  const handleControl = () => {
+    if (isPlaying) {
+      ref.current!.play()
+      setIsPlaying(false)
+    } else {
+
+      ref.current!.pause()
+      setIsPlaying(true)
+    }
+  }
+  const [currentTime, setCurrentTime] = React.useState<number>(0)
+  const [duration, setDuration] = React.useState<number>(0)
+
+  const handlePrev = () => {
+    setPrev(current)
+    setCurrent(prev => (prev - 1 + songs.length) % songs.length)
+  }
+  const handleNext = () => {
+    setPrev(current)
+    setCurrent(prev => (prev + 1) % songs.length)
+  }
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const audio = ref.current
+    audio!.currentTime = (audio!.duration / 100) * e.target.value || e.target.value
+    setPercentage(e.target.value)
+  }
+  const getCurrentTime = (e: React.ChangeEvent<HTMLAudioElement>) => {
+    const percentage = (e.target.currentTime / e.target.duration) * 100
+    const time = e.target.currentTime
+    setPercentage(percentage)
+    setCurrentTime(time)
+  }
+  const volume = 
+  if (prev !== current) {
+    window.location.reload
+  }
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+    <div className=' h-screen w-full flex justify-center items-center bg-slate-200'>
+      <Widget className=' shadow-md'>
+        <div className=' flex justify-between items-center flex-col'>
+          <CoverImage className=' h-[250px] w-[100%] rounded-2xl'>
+            <img
+              className=' h-full w-full rounded-2xl object-cover'
+              alt=" - Chilling Sunday"
+              src={song[current][0].image}
             />
-          </a>
+          </CoverImage>
+          <div className=' ml-1 min-w-0 gap-y-2 flex flex-col w-full py-3'>
+            <p className=' font-medium text-[12px]'>
+              {
+                song[current][0].album
+              }
+            </p>
+            <div className=' flex  justify-between items-center'>
+              <p className=' text-nowrap  text-[18px]'>
+                <b>{song[current][0].title}</b>
+              </p>
+              <p className=' text-nowrap tracking-tight text-[12px] text-slate-600'>
+                {song[current][0].artist}
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+        <Slider
+          aria-label="time-indicator"
+          size="small"
+          value={percentage}
+          valueLabelFormat={(value) => formatDuration(value).slice(0, 4)}
+          valueLabelDisplay='auto'
+          min={0}
+          step={(e) => { onChange(e) }}
+          max={100}
+          onChange={(e) => { onChange(e); }}
+          sx={{
+            height: 4,
+            '& .MuiSlider-thumb': {
+              width: 8,
+              height: 8,
+              transition: '0.3s cubic-bezier(.47,1.64,.41,.8)',
+              '&::before': {
+                boxShadow: '0 2px 12px 0 rgba(0,0,0,0.4)',
+              },
+              '&:hover, &.Mui-focusVisible': {
+              },
+              '&.Mui-active': {
+                width: 20,
+                height: 20,
+              },
+            },
+            '& .MuiSlider-rail': {
+              opacity: 0.28,
+            },
+          }}
         />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mt: 0,
+          }}
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+          <TinyText>{formatDuration(currentTime).slice(0, 4)}</TinyText>
+          <TinyText>{formatDuration('-' + duration - currentTime).slice(0, 5)}</TinyText>
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mt: -3,
+          }}
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+          <IconButton aria-label="previous song" onClick={handlePrev} disabled={current === 0} >
+            <FastRewindRounded fontSize="large" />
+          </IconButton>
+          <IconButton
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+            aria-label={paused ? 'play' : 'pause'}
+            onClick={() => {
+              setPaused(!paused)
+              handleControl()
+            }}
+          >
+            {paused ? (
+              <PlayArrowRounded
+                sx={{ fontSize: '3rem' }}
+              // 
+              />
+            ) : (
+              <PauseRounded sx={{ fontSize: '3rem' }} />
+            )}
+          </IconButton>
+          <IconButton aria-label="next song" onClick={handleNext} disabled={current === songs.length - 1}>
+            <FastForwardRounded fontSize="large" />
+          </IconButton>
+        </Box>
+        <Stack spacing={2} direction="row" sx={{ mb: 1, px: 1 }} alignItems="center">
+          <VolumeDownRounded />
+          <Slider
+            aria-label="Volume"
+            defaultValue={30}
+            sx={{
+              '& .MuiSlider-track': {
+                border: 'none',
+              },
+              '& .MuiSlider-thumb': {
+                width: 24,
+                height: 24,
+                backgroundColor: '#fff',
+                '&::before': {
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.4)',
+                },
+                '&:hover, &.Mui-focusVisible, &.Mui-active': {
+                  boxShadow: 'none',
+                },
+              },
+            }}
+          />
+          <VolumeUpRounded />
+        </Stack>
+      </Widget >
+      <audio ref={ref} src={song[current][0].songUrl}
+        onLoadedData={(e: React.SyntheticEvent<HTMLAudioElement>) => {
+          setDuration(e.target.duration.toFixed(2))
+        }
+        } onTimeUpdate={getCurrentTime} onEnded={handleNext} />
+    </div >
   );
 }
